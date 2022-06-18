@@ -1,6 +1,6 @@
 """Typing test implementation"""
 
-from utils import lower, split, remove_punctuation, lines_from_file
+from utils import count, lower, split, remove_punctuation, lines_from_file
 from ucb import main, interact, trace
 from datetime import datetime
 
@@ -150,7 +150,25 @@ def autocorrect(typed_word, word_list, diff_function, limit):
     'testing'
     """
     # BEGIN PROBLEM 5
-    "*** YOUR CODE HERE ***"
+    lowest_diff = min(word_list, key=lambda word: diff_function(typed_word, word, limit))
+    if diff_function(typed_word, lowest_diff, limit) > limit or typed_word in word_list:
+        return typed_word
+    else:
+        return lowest_diff
+    # correct_word = typed_word
+    # min_diff = 100 # choose a big value
+    # for word in word_list:
+    #     if typed_word == word:
+    #         return typed_word
+    #     else:
+    #         diff_len = diff_function(typed_word, word, limit)
+    #         if diff_len < min_diff:
+    #             min_diff = diff_len
+    #             correct_word = word
+    # if min_diff > limit:
+    #     return typed_word
+    # else:
+    #     return correct_word
     # END PROBLEM 5
 
 
@@ -177,7 +195,18 @@ def sphinx_swaps(start, goal, limit):
     5
     """
     # BEGIN PROBLEM 6
-    assert False, 'Remove this line'
+    def function_helper(start, goal, count):
+        if count > limit: # 剪枝
+            return limit + 1
+        elif start == '' and goal == '':
+            return count
+        elif start == '' or goal == '':
+            return count + abs(len(start) - len(goal))
+        elif start[0] != goal[0]:
+            return function_helper(start[1:], goal[1:], count + 1)
+        else:
+            return function_helper(start[1:], goal[1:], count)
+    return min(limit + 1, function_helper(start, goal, 0)) # 限制不同长度返回大小最大为limit+1
     # END PROBLEM 6
 
 
@@ -185,7 +214,7 @@ def minimum_mewtations(start, goal, limit):
     """A diff function that computes the edit distance from START to GOAL.
     This function takes in a string START, a string GOAL, and a number LIMIT.
 
-    Arguments:
+    Arguments: 
         start: a starting word
         goal: a goal word
         limit: a number representing an upper bound on the number of edits
@@ -198,25 +227,23 @@ def minimum_mewtations(start, goal, limit):
     >>> minimum_mewtations("ckiteus", "kittens", big_limit) # ckiteus -> kiteus -> kitteus -> kittens
     3
     """
-    assert False, 'Remove this line'
-
-    if ______________:  # Fill in the condition
-        # BEGIN
-        "*** YOUR CODE HERE ***"
-        # END
-
-    elif ___________:  # Feel free to remove or add additional cases
-        # BEGIN
-        "*** YOUR CODE HERE ***"
-        # END
-
-    else:
-        add = ...  # Fill in these lines
-        remove = ...
-        substitute = ...
-        # BEGIN
-        "*** YOUR CODE HERE ***"
-        # END
+    def func_helper(start, goal, count):
+        if count > limit:
+            return limit + 1
+        elif start == '' and goal == '':
+            return 0
+        elif start == '' or goal == '':
+            return count + abs(len(start) - len(goal))
+        elif start[0] == goal[0]:  # Fill in the condition
+            return minimum_mewtations(start[1:], goal[1:], count)
+        else:
+            add = minimum_mewtations(start, goal[1:], count + 1)  # Fill in these lines
+            remove = minimum_mewtations(start[1:], goal, count + 1)
+            substitute = minimum_mewtations(start[1:], goal[1:], count + 1)
+            # BEGIN
+            return min(limit + 1, add, remove, substitute)
+            # END
+    return func_helper(start, goal, 0)
 
 
 def final_diff(start, goal, limit):

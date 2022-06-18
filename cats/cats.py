@@ -231,7 +231,7 @@ def minimum_mewtations(start, goal, limit):
         if count > limit:
             return limit + 1
         elif start == '' and goal == '':
-            return 0
+            return count
         elif start == '' or goal == '':
             return count + abs(len(start) - len(goal))
         elif start[0] == goal[0]:  # Fill in the condition

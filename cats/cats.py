@@ -235,11 +235,11 @@ def minimum_mewtations(start, goal, limit):
         elif start == '' or goal == '':
             return count + abs(len(start) - len(goal))
         elif start[0] == goal[0]:  # Fill in the condition
-            return minimum_mewtations(start[1:], goal[1:], count)
+            return func_helper(start[1:], goal[1:], count)
         else:
-            add = minimum_mewtations(start, goal[1:], count + 1)  # Fill in these lines
-            remove = minimum_mewtations(start[1:], goal, count + 1)
-            substitute = minimum_mewtations(start[1:], goal[1:], count + 1)
+            add = func_helper(start, goal[1:], count + 1)  # Fill in these lines
+            remove = func_helper(start[1:], goal, count + 1)
+            substitute = func_helper(start[1:], goal[1:], count + 1)
             # BEGIN
             return min(limit + 1, add, remove, substitute)
             # END

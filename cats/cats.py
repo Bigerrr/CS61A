@@ -1,5 +1,6 @@
 """Typing test implementation"""
 
+import re
 from utils import count, lower, split, remove_punctuation, lines_from_file
 from ucb import main, interact, trace
 from datetime import datetime
@@ -284,7 +285,15 @@ def report_progress(sofar, prompt, user_id, upload):
     0.2
     """
     # BEGIN PROBLEM 8
-    "*** YOUR CODE HERE ***"
+    count = 0
+    n = len(prompt)
+    for i in range(len(sofar)):
+        if sofar[i] != prompt[i]:
+            break
+        count += 1
+    radio = count / n
+    upload({'id': user_id, 'progress': radio})
+    return radio
     # END PROBLEM 8
 
 
@@ -306,7 +315,12 @@ def time_per_word(words, times_per_player):
     [[6, 3, 6, 2], [10, 6, 1, 2]]
     """
     # BEGIN PROBLEM 9
-    "*** YOUR CODE HERE ***"
+    players = len(times_per_player)
+    times = [list() for i in range(players)]
+    for i in range(len(words)):
+        for j in range(players):
+            times[j].append(times_per_player[j][i+1] - times_per_player[j][i])
+    return match(words, times)
     # END PROBLEM 9
 
 
@@ -328,7 +342,20 @@ def fastest_words(match):
     player_indices = range(len(match["times"]))  # contains an *index* for each player
     word_indices = range(len(match["words"]))    # contains an *index* for each word
     # BEGIN PROBLEM 10
-    "*** YOUR CODE HERE ***"
+    fastest_player = [0 for i in word_indices] 
+    fastest_times = [100000 for i in word_indices] 
+    for i in player_indices:
+        times = match['times'][i]
+        print('Debug times=', times)
+        print('Debug',fastest_times)
+        for j in range(len(times)):
+            if times[j] < fastest_times[j]:
+                fastest_times[j] = times[j]    
+                fastest_player[j] = i
+    ans = [list() for i in player_indices] 
+    for i in range(len(fastest_player)):
+        ans[fastest_player[i]].append(match["words"][i])
+    return ans
     # END PROBLEM 10
 
 

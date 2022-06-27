@@ -1,6 +1,8 @@
 """CS 61A presents Ants Vs. SomeBees."""
 
+from pickle import NONE
 import random
+from unicodedata import name
 from ucb import main, interact, trace
 from collections import OrderedDict
 
@@ -181,6 +183,8 @@ class ThrowerAnt(Ant):
     damage = 1
     # ADD/OVERRIDE CLASS ATTRIBUTES HERE
     food_cost = 3
+    min_range = 0
+    max_range = float('inf')
 
     def nearest_bee(self):
         """Return the nearest Bee in a Place that is not the HIVE, connected to
@@ -190,9 +194,13 @@ class ThrowerAnt(Ant):
         """
         # BEGIN Problem 3 and 4
         place : Place = self.place
-        while len(place.bees) == 0 and place.is_hive == False:
+        count = 0
+        while len(place.bees) == 0 and place.is_hive == False and count < self.max_range or count < self.min_range:
+            if place.entrance == None:
+                break
             place = place.entrance
-        if place.is_hive:
+            count += 1
+        if place.entrance == None or place.is_hive or count < self.min_range or count > self.max_range:
             return None
         return random_bee(place.bees)
         # END Problem 3 and 4
@@ -225,7 +233,8 @@ class ShortThrower(ThrowerAnt):
     food_cost = 2
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 4
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    max_range = 3
     # END Problem 4
 
 
@@ -236,7 +245,8 @@ class LongThrower(ThrowerAnt):
     food_cost = 2
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 4
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    min_range = 5
     # END Problem 4
 
 
@@ -248,7 +258,7 @@ class FireAnt(Ant):
     food_cost = 5
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 5
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
     # END Problem 5
 
     def __init__(self, health=3):
@@ -264,10 +274,25 @@ class FireAnt(Ant):
         """
         # BEGIN Problem 5
         "*** YOUR CODE HERE ***"
+        place : Place = self.place
+        super().reduce_health(amount)
+        cur_damage = amount 
+        if self.health <= 0:
+            cur_damage += self.damage
+        bees_list : list[Bee] = place.bees[:]
+        for bee in bees_list:
+            bee.reduce_health(cur_damage)
         # END Problem 5
 
 # BEGIN Problem 6
 # The WallAnt class
+class WallAnt(Ant):
+    food_cost = 4
+    name = 'Wall'
+    implemented = True
+        
+    def __init__(self, health=4):
+        super().__init__(health)
 # END Problem 6
 
 # BEGIN Problem 7

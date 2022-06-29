@@ -1,8 +1,6 @@
 """CS 61A presents Ants Vs. SomeBees."""
 
-from pickle import NONE
 import random
-from unicodedata import name
 from ucb import main, interact, trace
 from collections import OrderedDict
 
@@ -136,7 +134,13 @@ class Ant(Insect):
             place.ant = self
         else:
             # BEGIN Problem 8
-            assert place.ant is None, 'Two ants in {0}'.format(place)
+            if self.can_contain(place.ant):
+                self.store_ant(place.ant)
+                place.ant = self
+            elif place.ant.can_contain(self):
+                place.ant.store_ant(self)
+            else:
+                assert False, "Two ants in {0}".format(place)
             # END Problem 8
         Insect.add_to(self, place)
 
@@ -297,6 +301,26 @@ class WallAnt(Ant):
 
 # BEGIN Problem 7
 # The HungryAnt Class
+class HungryAnt(Ant):
+    food_cost = 4
+    name = 'Hungry'
+    implemented = True
+
+    time_to_chew = 3
+
+    def __init__(self, health=1):
+        super().__init__(health)
+        self.chew_timer = 0
+
+    def action(self, gamestate):
+        if self.chew_timer != 0:
+            self.chew_timer = (self.chew_timer + 1) % (self.time_to_chew + 2)
+        if len(self.place.bees) == 0:
+            return
+        bee : Bee = random_bee(self.place.bees)
+        if self.chew_timer == 0:
+            self.chew_timer = 1
+            bee.reduce_health(bee.health)
 # END Problem 7
 
 
@@ -313,11 +337,13 @@ class ContainerAnt(Ant):
     def can_contain(self, other):
         # BEGIN Problem 8
         "*** YOUR CODE HERE ***"
+        return other.is_container == False and self.ant_contained is None
         # END Problem 8
 
     def store_ant(self, ant):
         # BEGIN Problem 8
         "*** YOUR CODE HERE ***"
+        self.ant_contained = ant
         # END Problem 8
 
     def remove_ant(self, ant):
@@ -338,6 +364,8 @@ class ContainerAnt(Ant):
     def action(self, gamestate):
         # BEGIN Problem 8
         "*** YOUR CODE HERE ***"
+        if self.ant_contained:
+            self.ant_contained.action(gamestate)
         # END Problem 8
 
 
@@ -348,11 +376,28 @@ class BodyguardAnt(ContainerAnt):
     food_cost = 4
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 8
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+
+    def __init__(self, health=2): 
+        super().__init__(health)
     # END Problem 8
 
 # BEGIN Problem 9
 # The TankAnt class
+class TankAnt(ContainerAnt):
+    name = 'Tank'
+    food_cost = 6
+    implemented = True
+    damage = 1
+
+    def __init__(self, health=2):
+        super().__init__(health)
+
+    def action(self, gamestate):
+        super().action(gamestate)
+        copy = self.place.bees[:]
+        for bee in copy:
+            bee.reduce_health(self.damage)
 # END Problem 9
 
 

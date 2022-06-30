@@ -54,11 +54,15 @@ class Insect:
 
     damage = 0
     # ADD CLASS ATTRIBUTES HERE
+    is_waterproof = False
 
     def __init__(self, health, place=None):
         """Create an Insect with a health amount and a starting PLACE."""
         self.health = health
         self.place = place  # set by Place.add_insect and Place.remove_insect
+        self.slow_time = 0
+        self.scary_time = 0
+        self.hasScary = False
 
     def reduce_health(self, amount):
         """Reduce health by AMOUNT, and remove the insect from its place if it
@@ -111,6 +115,7 @@ class Ant(Insect):
     def __init__(self, health=1):
         """Create an Insect with a HEALTH quantity."""
         super().__init__(health)
+        self.hasDoubled = False
 
     @classmethod
     def construct(cls, gamestate):
@@ -157,6 +162,9 @@ class Ant(Insect):
         """Double this ants's damage, if it has not already been doubled."""
         # BEGIN Problem 12
         "*** YOUR CODE HERE ***"
+        if self.hasDoubled  == False:
+            self.damage *= 2
+            self.hasDoubled = True
         # END Problem 12
 
 
@@ -409,16 +417,25 @@ class Water(Place):
         its health to 0."""
         # BEGIN Problem 10
         "*** YOUR CODE HERE ***"
+        super().add_insect(insect)
+        if insect.is_waterproof == False:
+            insect.reduce_health(insect.health)
         # END Problem 10
 
 # BEGIN Problem 11
 # The ScubaThrower class
+class ScubaThrower(ThrowerAnt):
+    food_cost = 6
+    name = 'Scuba'
+    implemented = True
+    is_waterproof = True
+    
 # END Problem 11
 
 # BEGIN Problem 12
 
 
-class QueenAnt(Ant):  # You should change this line
+class QueenAnt(ScubaThrower):  # You should change this line
 # END Problem 12
     """The Queen of the colony. The game is over if a bee enters her place."""
 
@@ -426,7 +443,7 @@ class QueenAnt(Ant):  # You should change this line
     food_cost = 7
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 12
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
     # END Problem 12
 
     @classmethod
@@ -437,6 +454,10 @@ class QueenAnt(Ant):  # You should change this line
         """
         # BEGIN Problem 12
         "*** YOUR CODE HERE ***"
+        if gamestate.hasQueen == False and cls.food_cost < gamestate.food:
+            gamestate.hasQueen = True
+            return super().construct(gamestate)
+        return None
         # END Problem 12
 
     def action(self, gamestate):
@@ -445,6 +466,15 @@ class QueenAnt(Ant):  # You should change this line
         """
         # BEGIN Problem 12
         "*** YOUR CODE HERE ***"
+        super().action(gamestate)
+        place : Place = self.place
+        while place.exit is not None:
+            place = place.exit
+            if place.ant is None:
+                continue
+            place.ant.double()
+            if place.ant.is_container and place.ant.ant_contained is not None:
+                place.ant.ant_contained.double()
         # END Problem 12
 
     def reduce_health(self, amount):
@@ -453,8 +483,13 @@ class QueenAnt(Ant):  # You should change this line
         """
         # BEGIN Problem 12
         "*** YOUR CODE HERE ***"
+        super().reduce_health(amount)
+        if self.health <= 0:
+            ants_lose()
         # END Problem 12
-
+    
+    def remove_from(self, place):
+        return 
 
 class AntRemover(Ant):
     """Allows the player to remove ants from the board in the GUI."""
@@ -472,6 +507,7 @@ class Bee(Insect):
     name = 'Bee'
     damage = 1
     # OVERRIDE CLASS ATTRIBUTES HERE
+    is_waterproof = True
 
     def sting(self, ant):
         """Attack an ANT, reducing its health by 1."""
@@ -495,13 +531,23 @@ class Bee(Insect):
 
         gamestate -- The GameState, used to access game state information.
         """
-        destination = self.place.exit
+        if self.scary_time != 0:
+            destination = self.place.entrance
+        else:
+            destination = self.place.exit
 
         # Extra credit: Special handling for bee direction
         if self.blocked():
             self.sting(self.place.ant)
         elif self.health > 0 and destination is not None:
+            if self.slow_time != 0 and gamestate.time % 2 == 1:
+                self.slow_time -= 1
+                return 
             self.move_to(destination)
+            if self.scary_time != 0:
+                self.scary_time -= 1
+        if self.slow_time != 0:
+            self.slow_time -= 1
 
     def add_to(self, place):
         place.bees.append(self)
@@ -515,6 +561,7 @@ class Bee(Insect):
         """Slow the bee for a further LENGTH turns."""
         # BEGIN Problem EC
         "*** YOUR CODE HERE ***"
+        self.slow_time += length 
         # END Problem EC
 
     def scare(self, length):
@@ -524,6 +571,10 @@ class Bee(Insect):
         """
         # BEGIN Problem EC
         "*** YOUR CODE HERE ***"
+        if self.hasScary == True:
+            return
+        self.hasScary = True
+        self.scary_time += length
         # END Problem EC
 
 
@@ -560,7 +611,7 @@ class SlowThrower(ThrowerAnt):
     name = 'Slow'
     food_cost = 4
     # BEGIN Problem EC
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
     # END Problem EC
 
     def throw_at(self, target):
@@ -574,12 +625,14 @@ class ScaryThrower(ThrowerAnt):
     name = 'Scary'
     food_cost = 6
     # BEGIN Problem EC
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
     # END Problem EC
 
     def throw_at(self, target):
         # BEGIN Problem EC
         "*** YOUR CODE HERE ***"
+        if target:
+            target.scare(2)
         # END Problem EC
 
 
@@ -722,6 +775,7 @@ class GameState:
         self.dimensions = dimensions
         self.active_bees = []
         self.configure(beehive, create_places)
+        self.hasQueen = False
 
     def configure(self, beehive, create_places):
         """Configure the places in the colony."""

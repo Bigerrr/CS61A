@@ -258,11 +258,11 @@ def shuffle(cards):
     ['AH', 'AD', 'AS', 'AC', '2H', '2D', '2S', '2C', '3H', '3D', '3S', '3C']
     """
     assert len(cards) % 2 == 0, 'len(cards) must be even'
-    half = _______________
+    half = len(cards) // 2
     shuffled = []
-    for i in _____________:
-        _________________
-        _________________
+    for i in range(half):
+        shuffled.append(cards[i])
+        shuffled.append(cards[half+i])
     return shuffled
 
 
@@ -284,7 +284,9 @@ def pairs(lst):
     5 5
     """
     "*** YOUR CODE HERE ***"
-
+    for i in lst:
+        for j in lst:
+            yield (i, j)
 
 class PairsIterator:
     """
@@ -342,6 +344,14 @@ def long_paths(tree, n):
     [Link(0, Link(11, Link(12, Link(13, Link(14)))))]
     """
     "*** YOUR CODE HERE ***"
+    if tree.is_leaf() and n <= 0:
+        return [Link(tree.label)]
+    paths = []
+    for branch in tree.branches:
+        sub_paths = long_paths(branch, n - 1)
+        for path in sub_paths:
+            paths.append(Link(tree.label, path))
+    return paths
 
 
 def flip_two(s):
@@ -359,8 +369,11 @@ def flip_two(s):
 
     # For an extra challenge, try writing out an iterative approach as well below!
     "*** YOUR CODE HERE ***"
-
-
+    while s != ():
+        if s.rest == ():
+            break
+        s.first, s.rest.first = s.rest.first, s.first
+        s = s.rest.rest
 class Link:
     """A linked list.
 
